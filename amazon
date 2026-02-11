@@ -1,0 +1,140 @@
+import mysql.connector
+
+conn=mysql.connector.connect(
+    host= "localhost",
+    user="root",
+    password="NKJABIRBOSS4K405",
+    database="project_db"
+)
+# print(conn.is_connected)
+
+cursor=conn.cursor()
+
+# cursor.execute("create table users(id int auto_increment,username varchar(50),primary key(id))")
+
+# cursor.execute("create table products(id int auto_increment primary key,name varchar(50),price float,stock int)")
+
+# cursor.execute("""
+# CREATE TABLE orderslist (
+#     id INT AUTO_INCREMENT PRIMARY KEY,
+#     user_id INT NOT NULL,
+#     product_id INT NOT NULL,
+#     quantity INT NOT NULL,
+
+#     FOREIGN KEY (user_id) REFERENCES users(id),
+#     FOREIGN KEY (product_id) REFERENCES products(id)
+# )
+# """)
+
+
+conn.commit()
+print("all tables created successfully")
+
+
+while True:
+    print("=== AMAZON E-COMMERCE ===")
+    print("1. Add user")
+    print("2. Add product")
+    print("3. View products")
+    print("4. Place order")
+    print("5. View orders")
+    print("6. show users")
+    print("7. Exit")
+
+    choice = input("Choose option: ")
+
+    
+    if choice == "1":
+        username = input("Enter username: ")
+        cursor.execute(
+            "INSERT INTO users (username) VALUES (%s)",
+            (username,)
+        )
+        conn.commit()
+        print("User added.")
+
+    
+    elif choice == "2":
+        name = input("Product name: ")
+        price = float(input("Price: "))
+        stock = int(input("Stock: "))
+
+        cursor.execute(
+            "INSERT INTO products (name, price, stock) VALUES (%s, %s, %s)",
+            (name, price, stock)
+        )
+        conn.commit()
+        print("Product added.")
+
+    
+    elif choice == "3":
+        cursor.execute("SELECT * FROM products")
+        products = cursor.fetchall()
+
+        print("\nID | Name | Price | Stock")
+        for p in products:
+            print(p)
+
+    
+    elif choice == "4":
+        user_id = int(input("User ID: "))
+        product_id = int(input("Product ID: "))
+        quantity = int(input("Quantity: "))
+
+        cursor.execute(
+            "INSERT INTO orderslist (user_id, product_id, quantity) VALUES (%s, %s, %s)",
+            (user_id, product_id, quantity)
+        )
+
+        cursor.execute(
+            "UPDATE products SET stock = stock - %s WHERE id = %s",
+            (quantity, product_id)
+        )
+        cursor.execute("SELECT stock FROM products WHERE id = %s", (product_id,))
+        available_stock = cursor.fetchone()[0]
+
+        if quantity > available_stock:
+         print("Not enough stock.")
+         continue
+
+
+        conn.commit()
+        print("Order placed.")
+
+    elif choice == "5":
+        cursor.execute("""
+        SELECT orders.id, users.username, products.name, orders.quantity
+        FROM orders
+        JOIN users ON orders.user_id = users.id
+        JOIN products ON orders.product_id = products.id
+        """)
+
+        orders = cursor.fetchall()
+
+        print("\nOrderID | User | Product | Qty")
+        for o in orders:
+            print(o)
+
+    elif choice == "6":
+        cursor.execute("select * from users")
+        users = cursor.fetchall()
+        
+        print(" ID | USERNAME")
+        for u in users:
+            print(u)
+    
+    elif choice == "7":
+        print("Exiting...")
+        print("done")
+        break
+
+    else:
+        print("Invalid choice.")
+
+
+
+
+
+
+cursor.close()
+conn.close()
